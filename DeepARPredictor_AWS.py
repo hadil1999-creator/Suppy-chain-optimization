@@ -10,6 +10,7 @@ import random
 import datetime
 import os
 
+from sagemaker.tuner import HyperparameterTuner, IntegerParameter, ContinuousParameter, CategoricalParameter
 
 
 import boto3
@@ -122,6 +123,19 @@ estimator = sagemaker.estimator.Estimator(
     output_path="s3://" + s3_output_path
 )
 
+# Define hyperparameter ranges
+hyperparameter_ranges = {
+    'context_length': IntegerParameter(10, 50),  # Context length between 10 and 50
+    'prediction_length': IntegerParameter(5, 20),  # Prediction length between 5 and 20
+    'num_cells': IntegerParameter(20, 100),  # Number of cells between 20 and 100
+    'num_layers': IntegerParameter(2, 6),  # Number of layers between 2 and 6
+    'learning_rate': ContinuousParameter(0.0001, 0.01),  # Learning rate between 0.0001 and 0.01
+    'dropout_rate': ContinuousParameter(0.01, 0.3),  # Dropout rate between 0.01 and 0.3
+    'mini_batch_size': IntegerParameter(16, 128),  # Mini batch size between 16 and 128
+    'epochs': IntegerParameter(50, 200),  # Epochs between 50 and 200
+    'early_stopping_patience': IntegerParameter(5, 20),  # Early stopping patience between 5 and 20
+}
+"""""
 hyperparameters = {
     "time_freq": freq,
     "context_length": str(context_length),
@@ -135,8 +149,25 @@ hyperparameters = {
     "dropout_rate": "0.05",
     "early_stopping_patience": "10"
 }
-
+""""
+# Now create the Hyperparameter Tuner
+tuner = HyperparameterTuner(
+    estimator=estimator,
+    objective_metric='validation:accuracy',  # Use 'validation:accuracy' as the objective metric
+    hyperparameter_ranges=hyperparameter_ranges,
+    max_jobs=10,  # Total number of tuning jobs
+    max_parallel_jobs=2,  # Number of parallel jobs
+    strategy='Bayesian',  # Use Bayesian optimization to select hyperparameters
+    objective_type='Maximize',  # Maximize the objective metric
+)
+"""""
 estimator.set_hyperparameters(**hyperparameters)
+"""
+# Use the Hyperparameter Tuner to start training
+tuner.fit(inputs=data_channels, wait=True)
+
+# Get the best hyperparameters
+best_estimator = tuner.best_estimator()
 
 %%time
 data_channels = {
@@ -145,8 +176,9 @@ data_channels = {
     "test": "{}/test/".format(s3_data_path)
 }
 
+"""""
 estimator.fit(inputs=data_channels, wait=True)
-
+"""
 job_name = estimator.latest_training_job.name
 
 endpoint_name = sagemaker_session.endpoint_from_job(
