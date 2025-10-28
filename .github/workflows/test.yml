@@ -9,6 +9,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Suppy-chain-optimization
 
     steps:
     - name: Checkout repository
@@ -21,18 +24,32 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install torch torchvision numpy matplotlib boto3 sagemaker pandas matplotlib ipywidgets
+        echo "Installing dependencies from requirements.txt..."
+        pip install -r Suppy-chain-optimization/requirements.txt
+        echo "Dependencies installation completed."
 
     - name: Test main script parameter stamp
-      run: python "Supply chain optimization.py" --get-stamp
+      run: |
+        echo "Testing parameter stamp..."
+        python "Supply chain optimization.py" --get-stamp
+        echo "Parameter stamp test completed."
 
     - name: Test main script basic import
-      run: python -c "import sys; sys.path.append('.'); exec(open('Supply chain optimization.py').read().split('if __name__')[0])"
+      run: |
+        echo "Testing basic import of main script..."
+        python -c "import sys; sys.path.append('.'); exec(open('Supply chain optimization.py').read().split('if __name__')[0])"
+        echo "Basic import test completed."
 
     - name: Check syntax of all Python files
       run: |
+        echo "Checking syntax of Python files..."
         python -m py_compile "Supply chain optimization.py"
+        echo "Supply chain optimization.py syntax check passed."
         python -m py_compile "DeepARPredictor_AWS.py"
+        echo "DeepARPredictor_AWS.py syntax check passed."
 
     - name: Test DeepAR script basic setup (without execution)
-      run: python -c "import sys; sys.path.append('.'); import ast; ast.parse(open('DeepARPredictor_AWS.py').read())"
+      run: |
+        echo "Testing DeepAR script basic setup..."
+        python -c "import sys; sys.path.append('.'); import ast; ast.parse(open('DeepARPredictor_AWS.py').read())"
+        echo "DeepAR script setup test completed."
