@@ -1,0 +1,38 @@
+name: Test Supply Chain Optimization
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        pip install torch torchvision numpy matplotlib boto3 sagemaker pandas matplotlib ipywidgets
+
+    - name: Test main script parameter stamp
+      run: python "Supply chain optimization.py" --get-stamp
+
+    - name: Test main script basic import
+      run: python -c "import sys; sys.path.append('.'); exec(open('Supply chain optimization.py').read().split('if __name__')[0])"
+
+    - name: Check syntax of all Python files
+      run: |
+        python -m py_compile "Supply chain optimization.py"
+        python -m py_compile "DeepARPredictor_AWS.py"
+
+    - name: Test DeepAR script basic setup (without execution)
+      run: python -c "import sys; sys.path.append('.'); import ast; ast.parse(open('DeepARPredictor_AWS.py').read())"
