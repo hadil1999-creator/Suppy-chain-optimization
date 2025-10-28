@@ -6,7 +6,7 @@ import numpy as np
 import time
 import torch
 from torch import optim
-import visual_plt
+#import visual_plt
 import utils
 
 from param_stamp import get_param_stamp, get_param_stamp_from_args
